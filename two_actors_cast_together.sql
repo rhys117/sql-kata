@@ -34,6 +34,29 @@
 -- title - Movie title
 -- Note: actor_id of the first_actor should be lower then actor_id of the second_actor
 
+
+-- Second attempt
+WITH top_team AS (
+  SELECT fa1.actor_id AS first_actor_id, fa2.actor_id AS second_actor_id
+  FROM film_actor fa1
+  INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id
+  WHERE fa1.actor_id <> fa2.actor_id
+  GROUP BY fa1.actor_id, fa2.actor_id
+  ORDER BY COUNT(fa1.film_id) DESC
+  LIMIT 1
+)
+
+SELECT
+  (SELECT CONCAT(first_name, ' ', last_name) FROM actor WHERE actor_id = tt.first_actor_id) AS first_actor,
+  (SELECT CONCAT(first_name, ' ', last_name) FROM actor WHERE actor_id = tt.second_actor_id) AS second_actor,
+  f.title
+FROM top_team tt
+INNER JOIN film_actor fa1 ON tt.first_actor_id = fa1.actor_id
+INNER JOIN film_actor fa2 ON tt.second_actor_id = fa2.actor_id
+INNER JOIN film f ON fa1.film_id = f.film_id AND fa2.film_id = f.film_id;
+
+
+
 -- First attempt
 WITH self_joined AS
 (
@@ -67,22 +90,3 @@ INNER JOIN actor first_actor ON first_actor.actor_id = mst.first_actor_id
 INNER JOIN actor second_actor ON second_actor.actor_id = mst.second_actor_id
 INNER JOIN film ON film.film_id = mst.film_id;
 
--- Second attempt
-WITH top_team AS (
-  SELECT fa1.actor_id AS first_actor_id, fa2.actor_id AS second_actor_id
-  FROM film_actor fa1
-  INNER JOIN film_actor fa2 ON fa1.film_id = fa2.film_id
-  WHERE fa1.actor_id <> fa2.actor_id
-  GROUP BY fa1.actor_id, fa2.actor_id
-  ORDER BY COUNT(fa1.film_id) DESC
-  LIMIT 1
-)
-
-SELECT
-  (SELECT CONCAT(first_name, ' ', last_name) FROM actor WHERE actor_id = tt.first_actor_id) AS first_actor,
-  (SELECT CONCAT(first_name, ' ', last_name) FROM actor WHERE actor_id = tt.second_actor_id) AS second_actor,
-  f.title
-FROM top_team tt
-INNER JOIN film_actor fa1 ON tt.first_actor_id = fa1.actor_id
-INNER JOIN film_actor fa2 ON tt.second_actor_id = fa2.actor_id
-INNER JOIN film f ON fa1.film_id = f.film_id AND fa2.film_id = f.film_id;
